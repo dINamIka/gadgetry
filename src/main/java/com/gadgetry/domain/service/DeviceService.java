@@ -37,6 +37,43 @@ public class DeviceService {
     }
 
     @Transactional
+    public Device update(UUID id, Device updateData) {
+        var existingDevice = findById(id);
+
+        if (existingDevice.isInUse()) {
+            if (updateData.getDisplayName() != null) {
+                var normalizedNewName =
+                        StringNormalizationUtil.normalize(updateData.getDisplayName());
+                if (!normalizedNewName.equals(existingDevice.getName())) {
+                    throw new DeviceInUseException("Cannot update name of device in use");
+                }
+            }
+            if (updateData.getDisplayBrand() != null) {
+                var normalizedNewBrand =
+                        StringNormalizationUtil.normalize(updateData.getDisplayBrand());
+                if (!normalizedNewBrand.equals(existingDevice.getBrand())) {
+                    throw new DeviceInUseException("Cannot update brand of device in use");
+                }
+            }
+        }
+
+        if (updateData.getDisplayName() != null) {
+            existingDevice.setDisplayName(updateData.getDisplayName());
+            existingDevice.setName(StringNormalizationUtil.normalize(updateData.getDisplayName()));
+        }
+        if (updateData.getDisplayBrand() != null) {
+            existingDevice.setDisplayBrand(updateData.getDisplayBrand());
+            existingDevice.setBrand(
+                    StringNormalizationUtil.normalize(updateData.getDisplayBrand()));
+        }
+        if (updateData.getState() != null) {
+            existingDevice.setState(updateData.getState());
+        }
+
+        return deviceRepository.save(existingDevice);
+    }
+
+    @Transactional
     public void delete(UUID id) {
         var device = findById(id);
 

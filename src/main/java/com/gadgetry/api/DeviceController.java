@@ -2,6 +2,8 @@ package com.gadgetry.api;
 
 import com.gadgetry.api.dto.DeviceCreateRequest;
 import com.gadgetry.api.dto.DeviceResponse;
+import com.gadgetry.api.dto.DeviceUpdateRequest;
+import com.gadgetry.domain.model.Device;
 import com.gadgetry.domain.service.DeviceService;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -31,6 +33,14 @@ public class DeviceController {
     public ResponseEntity<DeviceResponse> getById(@PathVariable UUID id) {
         var device = deviceService.findById(id);
         return ResponseEntity.ok(deviceMapper.toResponse(device));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<DeviceResponse> update(
+            @PathVariable UUID id, @Valid @RequestBody DeviceUpdateRequest request) {
+        Device updateData = deviceMapper.toEntity(request);
+        Device updated = deviceService.update(id, updateData);
+        return ResponseEntity.ok(deviceMapper.toResponse(updated));
     }
 
     @DeleteMapping("/{id}")
