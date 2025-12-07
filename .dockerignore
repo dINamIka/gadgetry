@@ -1,0 +1,40 @@
+# Build artifacts
+build/
+.gradle/
+out/
+target/
+bin/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+
+# Test files
+src/test/
+
+# Misc
+.env
+.env.local
+*.log
+*.tmp
+*.swp
+*~

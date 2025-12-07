@@ -1,0 +1,17 @@
+repos:
+  - repo: local
+    hooks:
+      - id: spotless-apply
+        name: Apply code formatting (Spotless)
+        entry: ./gradlew spotlessApply --quiet
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+      - id: spotless-check
+        name: Check code formatting (Spotless)
+        entry: ./gradlew spotlessCheck --quiet
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
