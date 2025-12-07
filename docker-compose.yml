@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: gadgetry-postgres
+    environment:
+      POSTGRES_DB: gadgetry
+      POSTGRES_USER: gadgetry
+      POSTGRES_PASSWORD: gadgetry
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gadgetry"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gadgetry-network
+
+volumes:
+  postgres-data:

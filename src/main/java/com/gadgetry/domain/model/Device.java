@@ -1,0 +1,59 @@
+package com.gadgetry.domain.model;
+
+import com.gadgetry.persistance.DeviceEntityListener;
+import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Where;
+
+@Entity
+@Table(name = "devices")
+@EntityListeners(DeviceEntityListener.class)
+@Where(clause = "deleted_at IS NULL")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Device {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(name = "display_name", nullable = false, length = 255)
+    private String displayName;
+
+    @Column(name = "display_brand", nullable = false, length = 100)
+    private String displayBrand;
+
+    @Column(name = "name", nullable = false, length = 255)
+    private String name;
+
+    @Column(name = "brand", nullable = false, length = 100)
+    private String brand;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state", nullable = false, length = 20)
+    private DeviceState state;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
+    public boolean isInUse() {
+        return state == DeviceState.IN_USE;
+    }
+}
