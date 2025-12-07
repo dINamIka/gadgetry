@@ -82,8 +82,7 @@ class DeviceRetrievalIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content.length()").value(2))
-                .andExpect(jsonPath("$.totalElements").value(2))
-                .andExpect(jsonPath("$.pageable").exists());
+                .andExpect(jsonPath("$.totalElements").value(2));
     }
 
     @Test
@@ -273,18 +272,18 @@ class DeviceRetrievalIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.content.length()").value(2))
                 .andExpect(jsonPath("$.totalElements").value(5))
                 .andExpect(jsonPath("$.totalPages").value(3))
-                .andExpect(jsonPath("$.number").value(0))
-                .andExpect(jsonPath("$.size").value(2));
+                .andExpect(jsonPath("$.pageNumber").value(0))
+                .andExpect(jsonPath("$.pageSize").value(2));
 
         mockMvc.perform(get("/api/devices").param("page", "1").param("size", "2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(2))
-                .andExpect(jsonPath("$.number").value(1));
+                .andExpect(jsonPath("$.pageNumber").value(1));
 
         mockMvc.perform(get("/api/devices").param("page", "2").param("size", "2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(1))
-                .andExpect(jsonPath("$.number").value(2));
+                .andExpect(jsonPath("$.pageNumber").value(2));
     }
 
     @Test

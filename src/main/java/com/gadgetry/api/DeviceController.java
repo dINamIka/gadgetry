@@ -3,6 +3,7 @@ package com.gadgetry.api;
 import com.gadgetry.api.dto.DeviceCreateRequest;
 import com.gadgetry.api.dto.DeviceResponse;
 import com.gadgetry.api.dto.DeviceUpdateRequest;
+import com.gadgetry.api.dto.PageResponse;
 import com.gadgetry.domain.model.DeviceState;
 import com.gadgetry.domain.service.DeviceService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,7 +17,6 @@ import jakarta.validation.constraints.Min;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -84,7 +84,7 @@ public class DeviceController {
                 @ApiResponse(responseCode = "200", description = "Devices retrieved successfully"),
                 @ApiResponse(responseCode = "400", description = "Invalid pagination parameters")
             })
-    public ResponseEntity<Page<DeviceResponse>> getAll(
+    public ResponseEntity<PageResponse<DeviceResponse>> getAll(
             @Parameter(description = "Filter by device name (case-insensitive partial match)")
                     @RequestParam(required = false)
                     String name,
@@ -110,7 +110,7 @@ public class DeviceController {
         var pageable = buildPageReq(page, size, sortField, sortParams);
         var devicePage = deviceService.findDevices(name, brand, state, pageable);
         var responsePage = devicePage.map(deviceMapper::toResponse);
-        return ResponseEntity.ok(responsePage);
+        return ResponseEntity.ok(PageResponse.of(responsePage));
     }
 
     private static PageRequest buildPageReq(
