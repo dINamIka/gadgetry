@@ -3,9 +3,13 @@ package com.gadgetry.api;
 import com.gadgetry.api.dto.DeviceCreateRequest;
 import com.gadgetry.api.dto.DeviceResponse;
 import com.gadgetry.api.dto.DeviceUpdateRequest;
-import com.gadgetry.domain.model.Device;
 import com.gadgetry.domain.model.DeviceState;
 import com.gadgetry.domain.service.DeviceService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -23,32 +27,72 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/devices")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Devices", description = "Device management API")
 public class DeviceController {
 
     private final DeviceService deviceService;
     private final DeviceMapper deviceMapper;
 
     @PostMapping
+    @Operation(
+            summary = "Create a new device",
+            description = "Creates a new device with the provided details")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "201", description = "Device created successfully"),
+                @ApiResponse(responseCode = "400", description = "Invalid input data"),
+                @ApiResponse(responseCode = "422", description = "Business validation failed")
+            })
     public ResponseEntity<DeviceResponse> create(@Valid @RequestBody DeviceCreateRequest request) {
-        var device = deviceMapper.toEntity(request);
-        var created = deviceService.create(device);
-        return ResponseEntity.status(HttpStatus.CREATED).body(deviceMapper.toResponse(created));
+        var createdDevice = deviceService.create(deviceMapper.toEntity(request));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(deviceMapper.toResponse(createdDevice));
     }
 
     @GetMapping("/{id}")
+    @Operation(
+            summary = "Get device by ID",
+            description = "Retrieves a device by its unique identifier")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "200", description = "Device found"),
+                @ApiResponse(responseCode = "404", description = "Device not found")
+            })
     public ResponseEntity<DeviceResponse> getById(@PathVariable UUID id) {
-        var device = deviceService.findById(id);
-        return ResponseEntity.ok(deviceMapper.toResponse(device));
+        return ResponseEntity.ok(deviceMapper.toResponse(deviceService.findById(id)));
     }
 
     @GetMapping
-    public ResponseEntity<Page<DeviceResponse>> geAll(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String brand,
-            DeviceState state,
-            @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size,
-            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+    @Operation(
+            summary = "Get all devices with pagination and optional filtering",
+            description =
+                    "Retrieves devices with pagination. Optionally filter by name, brand, and/or state")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "200", description = "Devices retrieved successfully"),
+                @ApiResponse(responseCode = "400", description = "Invalid pagination parameters")
+            })
+    public ResponseEntity<Page<DeviceResponse>> getAll(
+            @Parameter(description = "Filter by device name (case-insensitive partial match)")
+                    @RequestParam(required = false)
+                    String name,
+            @Parameter(description = "Filter by device brand (case-insensitive partial match)")
+                    @RequestParam(required = false)
+                    String brand,
+            @Parameter(description = "Filter by device state") @RequestParam(required = false)
+                    DeviceState state,
+            @Parameter(description = "Page number (0-indexed)")
+                    @RequestParam(defaultValue = "0")
+                    @Min(0)
+                    int page,
+            @Parameter(description = "Page size (max 50)")
+                    @RequestParam(defaultValue = "20")
+                    @Min(1)
+                    @Max(50)
+                    int size,
+            @Parameter(description = "Sort field and direction (e.g., 'createdAt,desc')")
+                    @RequestParam(defaultValue = "createdAt,desc")
+                    String sort) {
         var sortParams = sort.split(",");
         var sortField = sortParams[0];
         var direction =
@@ -57,24 +101,45 @@ public class DeviceController {
                         : Sort.Direction.DESC;
 
         var pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+
         var devicePage =
                 (name != null || brand != null || state != null)
                         ? deviceService.search(name, brand, state, pageable)
                         : deviceService.findAll(pageable);
 
-        Page<DeviceResponse> responsePage = devicePage.map(deviceMapper::toResponse);
+        var responsePage = devicePage.map(deviceMapper::toResponse);
         return ResponseEntity.ok(responsePage);
     }
 
     @PatchMapping("/{id}")
+    @Operation(
+            summary = "Update device",
+            description = "Partially updates a device (only provided fields are updated)")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "200", description = "Device updated successfully"),
+                @ApiResponse(responseCode = "404", description = "Device not found"),
+                @ApiResponse(
+                        responseCode = "409",
+                        description = "Device in use or optimistic lock conflict"),
+                @ApiResponse(responseCode = "422", description = "Invalid state transition")
+            })
     public ResponseEntity<DeviceResponse> update(
             @PathVariable UUID id, @Valid @RequestBody DeviceUpdateRequest request) {
-        Device updateData = deviceMapper.toEntity(request);
-        Device updated = deviceService.update(id, updateData);
-        return ResponseEntity.ok(deviceMapper.toResponse(updated));
+        var updatedDevice = deviceMapper.toEntity(request);
+        return ResponseEntity.ok(deviceMapper.toResponse(deviceService.update(id, updatedDevice)));
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete device", description = "Deletes a device")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "204", description = "Device deleted successfully"),
+                @ApiResponse(responseCode = "404", description = "Device not found"),
+                @ApiResponse(
+                        responseCode = "409",
+                        description = "Device is in use and cannot be deleted")
+            })
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         deviceService.delete(id);
         return ResponseEntity.noContent().build();

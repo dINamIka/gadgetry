@@ -1,6 +1,6 @@
 package com.gadgetry.domain.model;
 
-import com.gadgetry.persistance.DeviceEntityListener;
+import com.gadgetry.persistence.DeviceEntityListener;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;

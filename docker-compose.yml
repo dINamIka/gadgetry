@@ -20,5 +20,43 @@ services:
     networks:
       - gadgetry-network
 
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gadgetry-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/gadgetry
+      SPRING_DATASOURCE_USERNAME: gadgetry
+      SPRING_DATASOURCE_PASSWORD: gadgetry
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    networks:
+      - gadgetry-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/actuator/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  gadgetry-network:
+    driver: bridge
+
 volumes:
   postgres-data:

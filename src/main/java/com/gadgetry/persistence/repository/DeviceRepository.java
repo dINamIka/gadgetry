@@ -1,4 +1,4 @@
-package com.gadgetry.persistance.repository;
+package com.gadgetry.persistence.repository;
 
 import com.gadgetry.domain.model.Device;
 import java.util.UUID;

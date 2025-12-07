@@ -1,4 +1,4 @@
-package com.gadgetry.persistance;
+package com.gadgetry.persistence;
 
 import com.gadgetry.domain.model.Device;
 import com.gadgetry.domain.model.DeviceState;
