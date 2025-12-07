@@ -1,7 +1,9 @@
 package com.gadgetry.api;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.gadgetry.api.dto.DeviceCreateRequest;
 import com.gadgetry.api.dto.DeviceResponse;
@@ -322,6 +324,13 @@ class DeviceRetrievalIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].displayName").value("Device A"))
                 .andExpect(jsonPath("$.content[1].displayName").value("Device B"));
+    }
+
+    @Test
+    void shouldRejectInvalidSortField() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/devices").param("sort", "invalidField,desc"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

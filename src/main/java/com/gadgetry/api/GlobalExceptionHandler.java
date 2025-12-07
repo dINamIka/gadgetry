@@ -59,7 +59,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
         ConstraintViolationException.class,
-        MethodArgumentTypeMismatchException.class
+        MethodArgumentTypeMismatchException.class,
+        IllegalArgumentException.class
     })
     public ProblemDetail handleBadRequest(Exception ex) {
         var problemDetail =

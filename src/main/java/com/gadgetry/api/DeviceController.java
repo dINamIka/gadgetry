@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,7 +22,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/devices")
@@ -29,6 +38,9 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 @Tag(name = "Devices", description = "Device management API")
 public class DeviceController {
+
+    private static final Set<String> ALLOWED_SORT_FIELDS =
+            Set.of("createdAt", "updatedAt", "name", "brand", "state");
 
     private final DeviceService deviceService;
     private final DeviceMapper deviceMapper;
@@ -95,20 +107,28 @@ public class DeviceController {
                     String sort) {
         var sortParams = sort.split(",");
         var sortField = sortParams[0];
+        var pageable = buildPageReq(page, size, sortField, sortParams);
+        var devicePage = deviceService.findDevices(name, brand, state, pageable);
+        var responsePage = devicePage.map(deviceMapper::toResponse);
+        return ResponseEntity.ok(responsePage);
+    }
+
+    private static PageRequest buildPageReq(
+            int page, int size, String sortField, String[] sortParams) {
+        if (!ALLOWED_SORT_FIELDS.contains(sortField)) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Invalid sort field: %s. Allowed fields: %s",
+                            sortField, ALLOWED_SORT_FIELDS));
+        }
+
         var direction =
                 sortParams.length > 1 && sortParams[1].equalsIgnoreCase("asc")
                         ? Sort.Direction.ASC
                         : Sort.Direction.DESC;
 
         var pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
-
-        var devicePage =
-                (name != null || brand != null || state != null)
-                        ? deviceService.search(name, brand, state, pageable)
-                        : deviceService.findAll(pageable);
-
-        var responsePage = devicePage.map(deviceMapper::toResponse);
-        return ResponseEntity.ok(responsePage);
+        return pageable;
     }
 
     @PatchMapping("/{id}")

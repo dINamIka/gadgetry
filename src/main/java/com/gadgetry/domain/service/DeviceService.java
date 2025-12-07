@@ -41,12 +41,8 @@ public class DeviceService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Device> findAll(Pageable pageable) {
-        return deviceRepository.findAll(pageable);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<Device> search(String name, String brand, DeviceState state, Pageable pageable) {
+    public Page<Device> findDevices(
+            String name, String brand, DeviceState state, Pageable pageable) {
         Specification<Device> spec = null;
 
         var nameSpec = DeviceSpecification.hasName(name);
