@@ -40,4 +40,17 @@ class DeviceCreateIntegrationTest extends BaseIntegrationTest {
         assertThat(response.displayName()).isEqualTo("iPhone 15 Pro");
         assertThat(response.displayBrand()).isEqualTo("Apple");
     }
+
+    @Test
+    void shouldValidateRequiredFieldsOnCreate() throws Exception {
+        // given
+        var invalidRequest = "{}";
+
+        // when & then
+        mockMvc.perform(
+                        post("/api/devices")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(invalidRequest))
+                .andExpect(status().isBadRequest());
+    }
 }
