@@ -1,6 +1,9 @@
 package com.gadgetry.api;
 
 import jakarta.validation.ConstraintViolationException;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -8,12 +11,18 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
+import com.gadgetry.domain.exception.DeviceNotFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(DeviceNotFoundException.class)
+    public ProblemDetail handleDeviceNotFound(DeviceNotFoundException ex) {
+        var problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problemDetail.setTitle("Device Not Found");
+        problemDetail.setType(URI.create("https://api.gadgetry.com/errors/device-not-found"));
+        return problemDetail;
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidationErrors(MethodArgumentNotValidException ex) {
@@ -22,8 +31,7 @@ public class GlobalExceptionHandler {
                 .getFieldErrors()
                 .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
 
-        var problemDetail =
-                ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed");
+        var problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed");
         problemDetail.setTitle("Bad Request");
         problemDetail.setType(URI.create("https://api.gadgetry.com/errors/validation"));
         problemDetail.setProperty("errors", errors);
@@ -31,12 +39,11 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({
-        ConstraintViolationException.class,
-        MethodArgumentTypeMismatchException.class
+            ConstraintViolationException.class,
+            MethodArgumentTypeMismatchException.class
     })
     public ProblemDetail handleBadRequest(Exception ex) {
-        ProblemDetail problemDetail =
-                ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problemDetail.setTitle("Bad Request");
         problemDetail.setType(URI.create("https://api.gadgetry.com/errors/bad-request"));
         return problemDetail;
@@ -44,9 +51,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGenericError(Exception ex) {
-        ProblemDetail problemDetail =
-                ProblemDetail.forStatusAndDetail(
-                        HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
         problemDetail.setTitle("Internal Server Error");
         problemDetail.setType(URI.create("https://api.gadgetry.com/errors/internal-server-error"));
         return problemDetail;

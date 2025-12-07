@@ -29,7 +29,8 @@ public class DeviceController {
 
     @GetMapping("/{id}")
     public ResponseEntity<DeviceResponse> getById(@PathVariable UUID id) {
-        return ResponseEntity.ok(null);
+        var device = deviceService.findById(id);
+        return ResponseEntity.ok(deviceMapper.toResponse(device));
     }
 
     @DeleteMapping("/{id}")
