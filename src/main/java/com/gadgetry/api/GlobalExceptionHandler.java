@@ -2,6 +2,7 @@ package com.gadgetry.api;
 
 import com.gadgetry.domain.exception.DeviceInUseException;
 import com.gadgetry.domain.exception.DeviceNotFoundException;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.validation.ConstraintViolationException;
 import java.net.URI;
 import java.util.HashMap;
@@ -24,11 +25,20 @@ public class GlobalExceptionHandler {
         return problemDetail;
     }
 
-    @ExceptionHandler(DeviceInUseException.class)
+    @ExceptionHandler({DeviceInUseException.class, OptimisticLockException.class})
     public ProblemDetail handleConflict(Exception ex) {
         var problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         problemDetail.setTitle("Conflict");
         problemDetail.setType(URI.create("https://api.gadgetry.com/errors/conflict"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ProblemDetail handleUnprocessableEntity(Exception ex) {
+        var problemDetail =
+                ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+        problemDetail.setTitle("Unprocessable Entity");
+        problemDetail.setType(URI.create("https://api.gadgetry.com/errors/unprocessable-entity"));
         return problemDetail;
     }
 

@@ -4,11 +4,15 @@ import com.gadgetry.domain.exception.DeviceInUseException;
 import com.gadgetry.domain.exception.DeviceNotFoundException;
 import com.gadgetry.domain.model.Device;
 import com.gadgetry.domain.model.DeviceState;
+import com.gadgetry.persistance.DeviceSpecification;
 import com.gadgetry.persistance.repository.DeviceRepository;
 import com.gadgetry.util.StringNormalizationUtil;
 import java.time.Clock;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +38,36 @@ public class DeviceService {
     @Transactional(readOnly = true)
     public Device findById(UUID id) {
         return deviceRepository.findById(id).orElseThrow(() -> new DeviceNotFoundException(id));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Device> findAll(Pageable pageable) {
+        return deviceRepository.findAll(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Device> search(String name, String brand, DeviceState state, Pageable pageable) {
+        Specification<Device> spec = null;
+
+        var nameSpec = DeviceSpecification.hasName(name);
+        var brandSpec = DeviceSpecification.hasBrand(brand);
+        var stateSpec = state != null ? DeviceSpecification.hasState(state) : null;
+
+        if (nameSpec != null) {
+            spec = nameSpec;
+        }
+        if (brandSpec != null) {
+            spec = (spec == null) ? brandSpec : spec.and(brandSpec);
+        }
+        if (stateSpec != null) {
+            spec = (spec == null) ? stateSpec : spec.and(stateSpec);
+        }
+
+        if (spec != null) {
+            return deviceRepository.findAll(spec, pageable);
+        } else {
+            return deviceRepository.findAll(pageable);
+        }
     }
 
     @Transactional

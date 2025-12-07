@@ -4,10 +4,16 @@ import com.gadgetry.api.dto.DeviceCreateRequest;
 import com.gadgetry.api.dto.DeviceResponse;
 import com.gadgetry.api.dto.DeviceUpdateRequest;
 import com.gadgetry.domain.model.Device;
+import com.gadgetry.domain.model.DeviceState;
 import com.gadgetry.domain.service.DeviceService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -33,6 +39,31 @@ public class DeviceController {
     public ResponseEntity<DeviceResponse> getById(@PathVariable UUID id) {
         var device = deviceService.findById(id);
         return ResponseEntity.ok(deviceMapper.toResponse(device));
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<DeviceResponse>> geAll(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String brand,
+            DeviceState state,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+        var sortParams = sort.split(",");
+        var sortField = sortParams[0];
+        var direction =
+                sortParams.length > 1 && sortParams[1].equalsIgnoreCase("asc")
+                        ? Sort.Direction.ASC
+                        : Sort.Direction.DESC;
+
+        var pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+        var devicePage =
+                (name != null || brand != null || state != null)
+                        ? deviceService.search(name, brand, state, pageable)
+                        : deviceService.findAll(pageable);
+
+        Page<DeviceResponse> responsePage = devicePage.map(deviceMapper::toResponse);
+        return ResponseEntity.ok(responsePage);
     }
 
     @PatchMapping("/{id}")
