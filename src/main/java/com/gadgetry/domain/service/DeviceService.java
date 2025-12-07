@@ -10,6 +10,7 @@ import com.gadgetry.util.StringNormalizationUtil;
 import java.time.Clock;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class DeviceService {
 
@@ -25,6 +27,7 @@ public class DeviceService {
 
     @Transactional
     public Device create(Device device) {
+        log.info("Creating new device: {}", device.getDisplayName());
         // defaults to AVAILABLE if not set
         if (device.getState() == null) {
             device.setState(DeviceState.AVAILABLE);
@@ -37,12 +40,14 @@ public class DeviceService {
 
     @Transactional(readOnly = true)
     public Device findById(UUID id) {
+        log.debug("Fetching device with id: {}", id);
         return deviceRepository.findById(id).orElseThrow(() -> new DeviceNotFoundException(id));
     }
 
     @Transactional(readOnly = true)
     public Page<Device> findDevices(
             String name, String brand, DeviceState state, Pageable pageable) {
+        log.debug("Searching devices with name: {}, brand: {}, state: {}", name, brand, state);
         Specification<Device> spec = null;
 
         var nameSpec = DeviceSpecification.hasName(name);
@@ -68,6 +73,7 @@ public class DeviceService {
 
     @Transactional
     public Device update(UUID id, Device updateData) {
+        log.info("Updating device with id: {}", id);
         var existingDevice = findById(id);
 
         if (existingDevice.isInUse()) {
@@ -105,6 +111,7 @@ public class DeviceService {
 
     @Transactional
     public void delete(UUID id) {
+        log.info("Deleting device with id: {}", id);
         var device = findById(id);
 
         if (device.isInUse()) {

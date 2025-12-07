@@ -95,4 +95,26 @@ src/main/java/com/gadgetry/
 
 ## Database Migrations
 
-Flyway manages schema migrations. Migration files are in `src/main/resources/db/migration/`.
+Schema migrations are managed by Flyway. Migration files are in `src/main/resources/db/migration/`.
+
+## Future Improvements
+
+Some potential future improvements to consider:
+
+1. **Data Consistency**:
+   - Extract `brand` and `name` into separate entities/tables to ensure data consistency and reduce duplication across the system.
+
+2. **Database Scalability**:
+   - Configure separate read/write database access (e.g., using Read Replicas) to handle high load and improve performance at scale.
+
+3. **Observability**:
+   - Integrate distributed tracing (potentially OpenTelemetry) and structured logging. At the moment there is little logging which may hinder debugging in production.
+
+4. **Testing Strategy**:
+   - As the codebase grows, implement more granular unit and integration tests.
+
+5. **Environment Configuration**:
+   - Externalize configuration for different environments (dev, staging, prod) using spring profiles.
+   - Implement secrets management for sensitive data like DB credentials.
+
+6. **Security?**
